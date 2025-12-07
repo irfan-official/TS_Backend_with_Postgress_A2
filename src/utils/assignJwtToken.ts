@@ -24,7 +24,7 @@ export function assignJwtToken(req: Request, res: Response, payload: object) {
 
   // return bearer token for mobile, postman, APIs
   return {
-    type: "bearer",
+    type: "Bearer",
     token,
     message: "Token assigned via bearer",
   };
