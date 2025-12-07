@@ -91,32 +91,48 @@ export const createUser = async (req: Request, res: Response) => {
     });
   }
 };
-
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    const { name, email } = req.body;
+    const userId = req.params.userId;
+    const { name, email, password, phone } = req.body;
 
-    if (!name || !email) {
+    if (!name || !email || !phone) {
       return res.status(400).json({
         success: false,
-        message: "name and email are required",
+        message: "Name, email and phone are required",
       });
     }
 
-    const result = await pool.query(
-      `UPDATE users 
-       SET name = $2, email = $3 
-       WHERE id = $1 
-       RETURNING *`,
-      [req.params.userId, name, email]
-    );
+    const existing = await pool.query(`SELECT * FROM users WHERE id = $1`, [
+      userId,
+    ]);
 
-    if (result.rows.length === 0) {
+    if (existing.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+
+    // Hash password only if provided
+    let hashedPassword = existing.rows[0].password;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password, salt);
+    }
+
+    // Update all fields except role
+    const result = await pool.query(
+      `UPDATE users 
+       SET name = $1,
+           email = $2,
+           password = $3,
+           phone = $4,
+           updated_at = NOW()
+       WHERE id = $5
+       RETURNING id, name, email, phone, role, created_at, updated_at`,
+      [name, email, hashedPassword, phone, userId]
+    );
 
     return res.status(200).json({
       success: true,
@@ -130,7 +146,6 @@ export const updateUser = async (req: Request, res: Response) => {
     });
   }
 };
-
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`DELETE FROM users WHERE id = $1`, [
