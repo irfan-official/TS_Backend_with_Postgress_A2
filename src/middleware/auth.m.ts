@@ -1,24 +1,66 @@
+import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-dotenv.config();
+import checkUserAgent from "../utils/checkUserAgent";
+import config from "../config";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
 
-export const authMiddleware = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  const token = authHeader.split(" ")[1]; // "Bearer TOKEN"
-
+const authenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // store user info
+    const isBrowser = checkUserAgent(req);
+    const secret = config.jwt_secret;
+
+    if (!secret) {
+      throw new Error("JWT_SECRET is missing");
+    }
+
+    let token: string | undefined;
+
+    if (isBrowser) {
+      token = req.cookies?.token;
+    }
+    // Postman / Mobile → Read Bearer header
+    else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.split(" ")[1];
+      }
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+        redirect: "/api/v1/auth/signin",
+      });
+    }
+
+    // Validate token
+    const decoded = jwt.verify(token, secret) as { id: string; role: string };
+
+    // Attach user to request
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,
+    };
+
     next();
-  } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (error: any) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
+      redirect: "/api/v1/auth/signin",
+    });
   }
 };
- 
+
+export default authenticate;

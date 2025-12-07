@@ -8,6 +8,7 @@ import AuthRouter from "./module/auth/auth.routes";
 import UserRouter from "./module/user/user.routes";
 import VehiclesRouter from "./module/vehicles/vehicles.routes";
 import BookingsRouter from "./module/booking/booking.route";
+import authenticateMiddleware from "./middleware/auth.m";
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/v1/auth", AuthRouter);
+
+app.use(authenticateMiddleware);
 app.use("/api/v1/users", UserRouter);
 app.use("/api/v1/vehicles", VehiclesRouter);
 app.use("/api/v1/bookings", BookingsRouter);
