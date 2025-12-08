@@ -8,9 +8,9 @@ import {
 
 const router = express.Router();
 
-router.post("/", createBookings);
+router.post("/", createBookings); // all users
 
-router.get("/", allBookings);
+router.get("/", allBookings); // 
 
 router.put("/:bookingId", updateBookings);
 

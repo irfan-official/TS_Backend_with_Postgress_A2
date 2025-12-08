@@ -53,6 +53,8 @@ const authenticateMiddleware = async (
       role: decoded.role,
     };
 
+    console.log("req ==> ", req?.user);
+
     next();
   } catch (error: any) {
     return res.status(401).json({

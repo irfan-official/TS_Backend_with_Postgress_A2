@@ -7,8 +7,6 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(`SELECT * FROM users`);
 
-    console.log("req.user ==> ", req.user);
-
     return res.status(200).json({
       success: true,
       message: "all data retrieve successfully",
@@ -103,6 +101,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
 export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(`DELETE FROM users WHERE id = $1`, [

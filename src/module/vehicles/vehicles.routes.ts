@@ -7,13 +7,14 @@ import {
   updateVehicleDetails,
   deleteVehicle,
 } from "./vehicles..controllers";
+import authorizeMiddleware from "../../middleware/role.m";
 
 const router = express.Router();
 
-router.post("/", addVehicle); // admin only
+router.post("/", authorizeMiddleware, addVehicle); // admin only
 router.get("/", allVehicles);
 router.get("/:vehicleId", vehicleDetails);
-router.put("/:vehicleId", updateVehicleDetails);
-router.delete("/:vehicleId", deleteVehicle); //admin only
+router.put("/:vehicleId", authorizeMiddleware, updateVehicleDetails);
+router.delete("/:vehicleId", authorizeMiddleware, deleteVehicle); //admin only
 
 export default router;
