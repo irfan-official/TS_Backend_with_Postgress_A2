@@ -41,7 +41,7 @@ const initDB = async () => {
       customer_id INT REFERENCES users(id) ON DELETE CASCADE,
       vehicle_id INT REFERENCES vehicles(id) ON DELETE CASCADE,
       rent_start_date DATE NOT NULL,
-      rent_end_date DATE NOT NULL,
+      rent_end_date DATE NOT NULL CHECK (rent_end_date > rent_start_date),
       total_price NUMERIC(10,2) NOT NULL CHECK (total_price > 0),
       status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'returned')),
       created_at TIMESTAMP DEFAULT NOW(),
@@ -49,7 +49,7 @@ const initDB = async () => {
     );
   `);
 
-  console.log("✅ Database tables initialized successfully...");
+  console.log("Database tables initialized successfully...");
 };
 
 export default initDB;
