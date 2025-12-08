@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
   };
 }
 
-const authenticate = async (
+const authenticateMiddleware = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -63,4 +63,4 @@ const authenticate = async (
   }
 };
 
-export default authenticate;
+export default authenticateMiddleware;

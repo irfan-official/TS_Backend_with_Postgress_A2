@@ -1,10 +1,13 @@
 import express, { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { pool } from "../../config/db";
+import { AuthRequest } from "../../middleware/auth.m";
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(`SELECT * FROM users`);
+
+    console.log("req.user ==> ", req.user);
 
     return res.status(200).json({
       success: true,
@@ -19,7 +22,7 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserDetails = async (req: Request, res: Response) => {
+export const getUserDetails = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(`SELECT * FROM users WHERE id = $1`, [
       req.params.userId,
@@ -45,53 +48,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
   }
 };
 
-export const createUser = async (req: Request, res: Response) => {
-  const { name, email, password, phone, role = "user" } = req.body;
-
-  // Validate fields
-  if (!name || !email || !password || !phone) {
-    return res.status(400).json({
-      success: false,
-      message: "All fields are required",
-    });
-  }
-
-  try {
-    // Check if user already exists
-    const existing = await pool.query(`SELECT * FROM users WHERE email = $1`, [
-      email,
-    ]);
-
-    if (existing.rows.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists",
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const result = await pool.query(
-      `INSERT INTO users(name, email, password, phone, role)
-       VALUES($1, $2, $3, $4, $5)
-       RETURNING id, name, email, phone, role, created_at`,
-      [name, email, hashedPassword, phone, role]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "User created successfully",
-      data: result.rows[0],
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.params.userId;
     const { name, email, password, phone } = req.body;
@@ -146,7 +103,7 @@ export const updateUser = async (req: Request, res: Response) => {
     });
   }
 };
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(`DELETE FROM users WHERE id = $1`, [
       req.params.userId,

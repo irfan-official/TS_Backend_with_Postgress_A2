@@ -3,10 +3,10 @@ import { pool } from "../../config/db";
 import {
   getUsers,
   getUserDetails,
-  createUser,
   updateUser,
   deleteUser,
 } from "./user.controllers";
+import authorizeMiddleware from "../../middleware/role.m";
 
 const router = express.Router();
 
@@ -22,14 +22,12 @@ const router = express.Router();
 
 // latest ----------------------------------------->..
 
-router.get("/", getUsers); // admin only
+router.get("/", authorizeMiddleware, getUsers); // admin only
 
 router.get("/:userId", getUserDetails); // both
 
-router.post("/", createUser); // both
-
 router.put("/:userId", updateUser); // both
 
-router.delete("/:userId", deleteUser); // admin only
+router.delete("/:userId", authorizeMiddleware, deleteUser); // admin only
 
 export default router;
